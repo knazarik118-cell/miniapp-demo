@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Онлайн-запись</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://st.max.ru/js/max-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07070c;--card:rgba(255,255,255,.055);--card2:#13121b;--text:#f4f3f8;--muted:#928ca6;--line:rgba(255,255,255,.09);--chip:rgba(255,255,255,.07);
+  --acc:#9b5cff;--acc2:#ff4fd8;--grad:linear-gradient(120deg,var(--acc),var(--acc2));--soft:color-mix(in srgb,var(--acc) 20%,transparent);
+  --glow:0 0 24px color-mix(in srgb,var(--acc) 60%,transparent);--shadow:0 10px 30px rgba(0,0,0,.45)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;color:var(--text);font:15px/1.4 Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding-bottom:calc(104px + env(safe-area-inset-bottom));
+  background:radial-gradient(600px 400px at 100% 0,color-mix(in srgb,var(--acc2) 18%,transparent),transparent 70%),radial-gradient(500px 500px at 0 70%,color-mix(in srgb,var(--acc) 16%,transparent),transparent 70%),var(--bg);background-attachment:fixed;min-height:100vh}
+img{display:block}
+#app{animation:fade .3s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hero{position:relative;height:320px;background:#111 center/cover;overflow:hidden;-webkit-mask-image:linear-gradient(#000 72%,transparent)}
+.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,7,12,.15),rgba(7,7,12,.95))}
+.hero .in{position:absolute;left:18px;right:18px;bottom:44px;z-index:1}
+.hero b{font:800 30px Unbounded,sans-serif;display:block;letter-spacing:-.01em}
+.hero b em{font-style:normal;background:var(--grad);-webkit-background-clip:text;color:transparent}
+.hero .tags{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.hero .tags span{background:rgba(255,255,255,.08);backdrop-filter:blur(8px);border:1px solid var(--line);padding:5px 11px;border-radius:20px;font-size:12px;font-weight:700}
+h3{font:800 18px Unbounded,sans-serif;margin:16px 16px 12px}
+h3:after{content:"_";color:var(--acc2)}
+.team{display:flex;gap:14px;overflow-x:auto;padding:0 16px;scrollbar-width:none}.team::-webkit-scrollbar{display:none}
+.tm{flex:none;width:96px;text-align:center}
+.tm img{width:84px;height:84px;border-radius:50%;object-fit:cover;margin:0 auto 6px;padding:3px;background:var(--grad);box-shadow:var(--glow)}
+.tm b{font-size:13px;display:block}.tm small{font-size:11px;color:var(--muted)}
+.svc{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px}
+.sv{background:var(--card);border:1px solid var(--line);border-radius:22px;overflow:hidden;cursor:pointer;transition:transform .15s}
+.sv:active{transform:scale(.97)}
+.sv img{width:100%;aspect-ratio:1.15;object-fit:cover}
+.sv div{padding:10px 12px}.sv b{font-size:14px;display:block}.sv small{color:var(--muted);font-size:12px}
+.sv .p{font:800 15px Unbounded,sans-serif;margin-top:4px;display:block;background:var(--grad);-webkit-background-clip:text;color:transparent}
+.rev{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px;margin:0 16px 10px}
+.rev .s{color:#ffc93d;letter-spacing:2px}.rev p{margin:6px 0 0;font-size:14px}.rev small{color:var(--muted)}
+.top{display:flex;align-items:center;gap:10px;padding:16px 16px 0}
+.back{border:1px solid var(--line);background:var(--card);color:var(--text);width:42px;height:42px;border-radius:14px;font-size:20px}
+.top b{font-size:16px;font-weight:800}
+.steps{display:flex;gap:6px;margin:18px 16px 8px}.steps i{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.1);transition:.3s}.steps i.on{background:var(--grad);box-shadow:var(--glow)}
+.stepn{font-size:11px;color:var(--acc2);font-weight:900;letter-spacing:.14em;margin:0 16px 4px}
+h2{font:800 24px Unbounded,sans-serif;margin:0 16px 16px}
+h2:after{content:"_";color:var(--acc2)}
+.opt{display:flex;align-items:center;gap:12px;background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:10px;margin:0 16px 10px;transition:.2s;cursor:pointer}
+.opt.on{background:linear-gradient(var(--card2),var(--card2)) padding-box,var(--grad) border-box;border-color:transparent;box-shadow:var(--glow)}
+.opt img{width:64px;height:64px;border-radius:16px;object-fit:cover;flex:none}
+.opt img.r{border-radius:50%}
+.opt .ic{width:64px;height:64px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-size:28px;flex:none}
+.opt .t{flex:1}.opt .t b{font-size:15px}.opt .t small{display:block;color:var(--muted);font-size:13px}.opt .p{font-weight:800;white-space:nowrap}
+.chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;color:#fff;font-size:13px;font-weight:900}
+.opt.on .chk{background:var(--grad);border-color:transparent}
+.days{display:flex;gap:8px;overflow-x:auto;padding:0 16px 6px;margin-bottom:14px;scrollbar-width:none}.days::-webkit-scrollbar{display:none}
+.day{flex:none;width:62px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:18px;padding:11px 0;font:inherit}
+.day small{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.day b{font:800 19px Unbounded,sans-serif}
+.day.on{background:var(--grad);border-color:transparent;box-shadow:var(--glow)}.day.on small{color:#fff}
+.mon{color:var(--muted);margin:0 16px 10px;text-transform:capitalize;font-weight:800}
+.times{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 16px}
+.time{border:1px solid var(--line);background:var(--card);color:var(--text);padding:13px 0;border-radius:14px;font:800 14px Manrope,sans-serif}
+.time.on{background:var(--grad);border-color:transparent;box-shadow:var(--glow)}.time:disabled{opacity:.25;text-decoration:line-through}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px;margin:0 16px 12px}
+.sumc{display:flex;gap:12px;align-items:center;padding-bottom:12px;border-bottom:1px dashed var(--line);margin-bottom:6px}
+.sumc img{width:74px;height:74px;border-radius:18px;object-fit:cover}
+.l{display:flex;justify-content:space-between;padding:7px 0}.l span:first-child{color:var(--muted)}
+.gt{background:var(--grad);-webkit-background-clip:text;color:transparent}
+label{display:block;font-size:11px;font-weight:800;color:var(--muted);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.1em}
+input,textarea{width:100%;padding:13px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--text);font:inherit;outline:none}
+input::placeholder,textarea::placeholder{color:#5f5a70}
+input:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--soft)}
+.foot{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 35%);z-index:10}
+.btn{display:block;width:100%;border:0;border-radius:18px;padding:18px;font:800 15px Unbounded,sans-serif;letter-spacing:.02em;background:var(--grad);color:#fff;box-shadow:var(--glow),0 10px 30px rgba(0,0,0,.5);transition:.2s}
+.btn:disabled{opacity:.35;box-shadow:none}
+.done{text-align:center;padding:50px 20px 10px}.done .ok{width:104px;height:104px;border-radius:50%;background:var(--soft);border:2px solid var(--acc2);box-shadow:var(--glow);display:grid;place-items:center;margin:0 auto 18px;font-size:50px;animation:pop .5s}
+.done h2{margin:0 0 4px}.done h2:after{content:""}
+@keyframes pop{50%{transform:scale(1.2)}}
+.mst{display:flex;gap:12px;align-items:center;justify-content:center;margin:16px 0}.mst img{width:58px;height:58px;border-radius:50%;object-fit:cover;padding:2px;background:var(--grad)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="foot"><button class="btn" id="next">Записаться</button></div>
+
+<script>
+/* ===== Настройки салона ===== */
+const S = {
+  name:"Studio Line", tag:"Барбершоп и салон красоты", rating:"4,9", reviews:312, addr:"ул. Ленина, 42", banner:"img/ban_salon.jpg",
+  services:[
+    ["Мужская стрижка","45 мин",1200,"img/s_1.jpg"],["Стрижка + борода","1 ч 15 мин",1800,"img/s_2.jpg"],
+    ["Женская стрижка","1 ч",1600,"img/s_3.jpg"],["Окрашивание","2 ч",3500,"img/s_4.jpg"],
+    ["Маникюр с покрытием","1 ч 30 мин",1700,"img/s_5.jpg"],["Укладка","40 мин",1000,"img/s_6.jpg"],
+  ],
+  masters:[
+    ["Любой мастер","Ближайшее свободное время","",""],["Артём","Топ-барбер · 6 лет","img/m_1.jpg","4,9"],
+    ["Екатерина","Стилист-колорист","img/m_2.jpg","5,0"],["Дарья","Мастер маникюра","img/m_3.jpg","4,8"],
+  ],
+  reviews_list:[["Анна","Лучшее окрашивание в городе! Екатерина — волшебница."],["Игорь","Артём сделал идеальный фейд, записываюсь только сюда."]],
+  times:["10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00"],
+};
+/* ============================ */
+
+const TG = window.Telegram && Telegram.WebApp && Telegram.WebApp.initData ? Telegram.WebApp : null;
+const APP = TG || window.WebApp || null;
+const safeH=(m,...a)=>{try{const r=APP&&APP.HapticFeedback&&APP.HapticFeedback[m](...a);if(r&&r.catch)r.catch(()=>{})}catch(e){}};
+try{ APP && APP.ready && APP.ready(); TG && TG.expand(); }catch(e){}
+const hap = () => { safeH("selectionChanged",); };
+const user = (()=>{ try{ return APP.initDataUnsafe.user||null }catch(e){ return null } })();
+const rub = n => n.toLocaleString("ru-RU")+" ₽";
+const $ = id => document.getElementById(id);
+
+const dows = ["вс","пн","вт","ср","чт","пт","сб"];
+const days = [...Array(14)].map((_,i)=>{ const d=new Date(); d.setDate(d.getDate()+i); return d; });
+let step = 0, sv = null, ms = null, dy = 0, tm = null;
+
+const busy = (d,t) => ((d*7 + t.charCodeAt(1)*3 + (ms||0)) % 5)===0;
+const head = (title,n) => `<div class="top"><button class="back" onclick="back()">‹</button><b>${S.name}</b></div>
+  <div class="steps">${[1,2,3,4].map(i=>`<i class="${i<=n?'on':''}"></i>`).join("")}</div>
+  <div class="stepn">ШАГ ${n} ИЗ 4</div><h2>${title}</h2>`;
+const mImg = (m,cls="r") => m[2] ? `<img class="${cls}" src="${m[2]}">` : `<div class="ic">✨</div>`;
+
+function render(){
+  const app = $("app"), nx = $("next"); nx.disabled = false;
+  app.style.animation="none"; void app.offsetWidth; app.style.animation="";
+  if(step===0){
+    app.innerHTML = `<div class="hero" style="background-image:url(${S.banner})"><div class="in"><b>Studio <em>Line</em></b><span>${S.tag}</span>
+      <div class="tags"><span>⭐ ${S.rating} · ${S.reviews} отзывов</span><span>📍 ${S.addr}</span><span>🕘 10–22</span></div></div></div>
+      <h3>Наши мастера</h3>
+      <div class="team">${S.masters.slice(1).map(m=>`<div class="tm"><img src="${m[2]}"><b>${m[0]}</b><small>⭐ ${m[3]}</small></div>`).join("")}</div>
+      <h3>Популярные услуги</h3>
+      <div class="svc">${S.services.slice(0,4).map((s,i)=>`<div class="sv" onclick="sv=${i};step=2;hap();render()"><img src="${s[3]}"><div><b>${s[0]}</b><small>${s[1]}</small><span class="p">${rub(s[2])}</span></div></div>`).join("")}</div>
+      <h3>Отзывы</h3>
+      ${S.reviews_list.map(r=>`<div class="rev"><span class="s">★★★★★</span><p>${r[1]}</p><small>${r[0]}</small></div>`).join("")}`;
+    nx.textContent = "Записаться онлайн";
+  }
+  if(step===1){
+    app.innerHTML = head("Выберите услугу",1) + S.services.map((s,i)=>`
+      <div class="opt ${sv===i?'on':''}" onclick="sv=${i};hap();render()"><img src="${s[3]}"><div class="t"><b>${s[0]}</b><small>${s[1]}</small></div><div class="p">${rub(s[2])}</div></div>`).join("");
+    nx.textContent = "Далее"; nx.disabled = sv===null;
+  }
+  if(step===2){
+    app.innerHTML = head("Выберите мастера",2) + S.masters.map((m,i)=>`
+      <div class="opt ${ms===i?'on':''}" onclick="ms=${i};hap();render()">${mImg(m)}<div class="t"><b>${m[0]}</b><small>${m[1]}${m[3]?` · ⭐ ${m[3]}`:""}</small></div><div class="chk">✓</div></div>`).join("");
+    nx.textContent = "Далее"; nx.disabled = ms===null;
+  }
+  if(step===3){
+    const mon = days[dy].toLocaleString("ru-RU",{month:"long"});
+    app.innerHTML = head("Дата и время",3) + `
+      <div class="days">${days.map((d,i)=>`<button class="day ${i===dy?'on':''}" onclick="dy=${i};tm=null;hap();render()"><small>${i?dows[d.getDay()]:"сегодня"}</small><b>${d.getDate()}</b></button>`).join("")}</div>
+      <div class="mon">${mon}</div>
+      <div class="times">${S.times.map(t=>`<button class="time ${tm===t?'on':''}" ${busy(dy,t)?"disabled":""} onclick="tm='${t}';hap();render()">${t}</button>`).join("")}</div>`;
+    nx.textContent = "Далее"; nx.disabled = !tm;
+  }
+  if(step===4){
+    const s=S.services[sv], m=S.masters[ms], d=days[dy].toLocaleString("ru-RU",{weekday:"short",day:"numeric",month:"long"});
+    app.innerHTML = head("Подтверждение",4) + `
+      <div class="card"><div class="sumc"><img src="${s[3]}"><div><b style="font-size:17px">${s[0]}</b><br><small style="color:var(--muted)">${s[1]}</small></div></div>
+      <div class="l"><span>Мастер</span><b>${m[0]}</b></div><div class="l"><span>Когда</span><b>${d}, ${tm}</b></div>
+      <div class="l"><span>Адрес</span><b>${S.addr}</b></div><div class="l"><span>Стоимость</span><b class="gt">${rub(s[2])}</b></div></div>
+      <div class="card"><label style="margin-top:0">Имя</label><input id="nm" value="${user?(user.first_name||''):''}" placeholder="Ваше имя">
+      <label>Телефон</label><input id="ph" type="tel" placeholder="+7 ___ ___-__-__">
+      <label>Комментарий</label><textarea id="cm" rows="2" placeholder="Например: машинка 3 мм"></textarea></div>`;
+    nx.textContent = "Подтвердить запись";
+  }
+  if(step===5){
+    const s=S.services[sv], m=S.masters[ms], d=days[dy].toLocaleString("ru-RU",{weekday:"long",day:"numeric",month:"long"});
+    app.innerHTML = `<div class="done"><div class="ok">🎉</div><h2 style="margin:0 0 4px">Вы записаны!</h2>
+      <div class="mst">${m[2]?`<img src="${m[2]}">`:""}<div style="text-align:left"><b>${s[0]}</b><br><small style="color:var(--muted)">${m[0]}</small></div></div>
+      <p style="font-size:17px"><b>${d}, ${tm}</b><br><span style="color:var(--muted)">${S.addr}</span></p></div>
+      <div class="card">🔔 Напомним за 2 часа до визита сообщением в чат</div>`;
+    nx.textContent = "Готово";
+  }
+  scrollTo(0,0);
+}
+
+function back(){ step = Math.max(0, step-1); hap(); render(); }
+$("next").onclick = ()=>{
+  if(step===4){
+    const ph=$("ph"); if(ph.value.replace(/\D/g,"").length<10){ ph.style.borderColor="#e03131"; ph.focus(); safeH("notificationOccurred","error"); return; }
+    /* Здесь запись уходит владельцу: в бота, в CRM или Google-таблицу */
+    safeH("notificationOccurred","success");
+  }
+  if(step===5){ step=0; sv=ms=tm=null; dy=0; render(); return; }
+  step++; hap(); render();
+};
+const DS = +new URLSearchParams(location.search).get("step")||0;
+if(DS){ step=DS; sv=0; ms=1; if(DS>=4) tm="15:00"; }
+render();
+</script>
+</body>
+</html>

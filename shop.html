@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Мини-магазин</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://st.max.ru/js/max-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07080c;--card:rgba(255,255,255,.055);--card2:#12141b;--text:#f4f5f8;--muted:#8d93a1;--line:rgba(255,255,255,.09);--chip:rgba(255,255,255,.07);
+  --acc:#ff7a1a;--acc2:#ffcc33;--grad:linear-gradient(120deg,var(--acc),var(--acc2));--soft:color-mix(in srgb,var(--acc) 18%,transparent);
+  --glow:0 0 24px color-mix(in srgb,var(--acc) 55%,transparent);--shadow:0 10px 30px rgba(0,0,0,.45)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;color:var(--text);font:15px/1.4 Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding-bottom:calc(110px + env(safe-area-inset-bottom));
+  background:radial-gradient(600px 400px at 100% 0,color-mix(in srgb,var(--acc) 22%,transparent),transparent 70%),radial-gradient(500px 500px at 0 60%,color-mix(in srgb,var(--acc2) 10%,transparent),transparent 70%),var(--bg);background-attachment:fixed;min-height:100vh}
+img{display:block}
+.U{font-family:Unbounded,Manrope,sans-serif}
+.page{display:none}.page.on{display:block;animation:fade .3s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.hero{position:relative;height:300px;background:#111 center/cover;overflow:hidden;-webkit-mask-image:linear-gradient(#000 70%,transparent)}
+.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,8,12,.2) 0,rgba(7,8,12,.35) 45%,rgba(7,8,12,.95) 100%)}
+.hero .in{position:absolute;left:18px;right:18px;bottom:44px;z-index:1}
+.topbar{position:absolute;top:14px;left:16px;right:16px;z-index:2;display:flex;justify-content:space-between;align-items:center}
+.pill{display:flex;align-items:center;gap:6px;background:rgba(10,10,14,.55);backdrop-filter:blur(12px);border:1px solid var(--line);padding:7px 12px;border-radius:30px;font-weight:800;font-size:13px}
+.pill b{background:var(--grad);-webkit-background-clip:text;color:transparent}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:54px;height:54px;border-radius:18px;background:var(--grad);display:grid;place-items:center;font-size:28px;box-shadow:var(--glow);flex:none}
+.brand b{font:800 24px Unbounded,sans-serif;display:block;letter-spacing:-.01em}
+.brand small{color:#c9ccd4;font-size:13px}
+.meta{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.meta span{background:rgba(255,255,255,.08);backdrop-filter:blur(8px);border:1px solid var(--line);padding:5px 11px;border-radius:20px;font-size:12px;font-weight:700}
+.promo{margin:-26px 16px 0;position:relative;z-index:2;border-radius:20px;padding:14px;display:flex;align-items:center;gap:12px;
+  background:linear-gradient(var(--card2),var(--card2)) padding-box,var(--grad) border-box;border:1.5px solid transparent;box-shadow:var(--shadow)}
+.promo i{font-style:normal;width:42px;height:42px;border-radius:14px;background:var(--soft);display:grid;place-items:center;font-size:20px;flex:none}
+.promo b{display:block;font-size:14px}.promo small{color:var(--muted);font-size:12px}
+
+.search{display:flex;align-items:center;gap:8px;margin:16px 16px 0;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:0 14px}
+.search input{flex:1;border:0;background:none;padding:14px 0;font:inherit;color:var(--text);outline:none}
+.search input::placeholder{color:var(--muted)}
+.cats{position:sticky;top:0;z-index:5;background:rgba(7,8,12,.8);backdrop-filter:blur(14px);display:flex;gap:8px;overflow-x:auto;padding:14px 16px 12px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cats button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 16px;border-radius:22px;font:700 13px Manrope,sans-serif;letter-spacing:.02em;transition:.2s}
+.cats button.on{background:var(--grad);color:#111;border-color:transparent;box-shadow:var(--glow)}
+h3{margin:8px 16px 12px;font:800 18px Unbounded,sans-serif;letter-spacing:.01em}
+h3:after{content:"_";color:var(--acc)}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:22px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .15s,border-color .2s}
+.item:active{transform:scale(.97)}
+.ph{position:relative;aspect-ratio:1;background:#15171e;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.ph:after{content:"";position:absolute;inset:auto 0 0 0;height:40%;background:linear-gradient(transparent,rgba(7,8,12,.6))}
+.item:hover .ph img{transform:scale(1.06)}
+.badge{position:absolute;top:10px;left:10px;z-index:1;background:var(--grad);color:#111;font-size:10px;font-weight:900;padding:5px 9px;border-radius:10px;letter-spacing:.05em;text-transform:uppercase;box-shadow:var(--glow)}
+.badge.sale{background:#ff3b5c;color:#fff;box-shadow:0 0 18px #ff3b5c99}
+.info{padding:10px 12px 12px;display:flex;flex-direction:column;flex:1}
+.info b{font-size:14px;line-height:1.25;font-weight:700}
+.info small{color:var(--muted);font-size:12px;margin:3px 0 10px;flex:1}
+.buy{display:flex;align-items:center;justify-content:space-between}
+.buy span{font-weight:800;font-size:16px}
+.add{border:0;background:var(--grad);color:#111;width:36px;height:36px;border-radius:12px;font-size:22px;line-height:1;font-weight:800;box-shadow:var(--glow)}
+.qty{display:flex;align-items:center;gap:8px;background:var(--soft);border:1px solid color-mix(in srgb,var(--acc) 40%,transparent);border-radius:12px;padding:2px;font-weight:800;color:var(--acc2)}
+.qty button{border:0;background:rgba(255,255,255,.08);color:var(--text);width:30px;height:30px;border-radius:9px;font-size:18px;font-weight:800}
+.pop{animation:pop .3s}
+@keyframes pop{50%{transform:scale(1.3)}}
+
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:50;opacity:0;pointer-events:none;transition:.25s}
+.sheet-bg.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;background:#0d0f15;border-top:1px solid var(--line);border-radius:28px 28px 0 0;transform:translateY(105%);transition:transform .35s cubic-bezier(.2,.8,.2,1);max-height:92vh;overflow:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.sheet.on{transform:none}
+.sheet .big{width:100%;aspect-ratio:1.15;object-fit:cover;-webkit-mask-image:linear-gradient(#000 75%,transparent)}
+.sheet .grab{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,.7)}
+.sheet .x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:rgba(0,0,0,.5);backdrop-filter:blur(8px);color:#fff;font-size:16px}
+.sheet .body{padding:0 16px 16px;margin-top:-20px;position:relative}
+.sheet h2{margin:0 0 4px;font:800 22px Unbounded,sans-serif}
+.sheet .d{color:var(--muted);margin-bottom:12px}
+.sheet .row2{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.sheet .row2 span{background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700}
+
+h2.t{margin:0;padding:20px 16px 14px;font:800 24px Unbounded,sans-serif}
+h2.t:after{content:"_";color:var(--acc)}
+.row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px;margin:0 16px 10px}
+.row img{width:64px;height:64px;border-radius:14px;object-fit:cover;flex:none}
+.row .t{flex:1}.row .t b{display:block;font-size:14px}.row .t small{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px;margin:0 16px 12px}
+label{display:block;font-size:11px;font-weight:800;color:var(--muted);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.1em}
+input,textarea,select{width:100%;padding:13px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--text);font:inherit;outline:none}
+input::placeholder,textarea::placeholder{color:#5f6572}
+input:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--soft)}
+.seg{display:flex;gap:6px;background:rgba(0,0,0,.35);border:1px solid var(--line);padding:4px;border-radius:16px}
+.seg button{flex:1;border:0;background:none;color:var(--muted);padding:10px;border-radius:12px;font:800 13px Manrope,sans-serif}
+.seg button.on{background:var(--grad);color:#111;box-shadow:var(--glow)}
+.sum{display:flex;justify-content:space-between;padding:5px 0;color:var(--muted)}.sum span:last-child{color:var(--text);font-weight:700}
+.sum.big{font:800 19px Unbounded,sans-serif;padding-top:12px;border-top:1px dashed var(--line);margin-top:8px;color:var(--text)}
+.bar{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--grad);border-radius:3px;box-shadow:var(--glow)}
+.btn{display:block;width:calc(100% - 32px);margin:8px 16px;border:0;border-radius:18px;padding:17px;font:800 15px Unbounded,sans-serif;letter-spacing:.02em;background:var(--grad);color:#111;box-shadow:var(--glow),0 10px 30px rgba(0,0,0,.4)}
+.sheet .btn{width:100%;margin:0}
+.empty{text-align:center;color:var(--muted);padding:70px 30px}.empty div{font-size:64px;margin-bottom:8px;filter:drop-shadow(var(--glow))}
+.done{text-align:center;padding:60px 24px}.done .ok{width:104px;height:104px;border-radius:50%;background:var(--soft);border:2px solid var(--acc);box-shadow:var(--glow);display:grid;place-items:center;margin:0 auto 18px;font-size:50px;animation:pop .5s}
+.done h2{font-family:Unbounded,sans-serif}
+
+.fcart{position:fixed;left:16px;right:16px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:20;background:var(--grad);color:#111;border-radius:20px;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:var(--glow),0 14px 30px rgba(0,0,0,.5);transform:translateY(calc(100% + 160px));transition:transform .35s;font-weight:900}
+.fcart.on{transform:none}
+.fcart .n{background:rgba(0,0,0,.18);border-radius:10px;padding:3px 9px}
+.fcart .s{margin-left:auto;font-family:Unbounded,sans-serif}
+
+nav{position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:30;background:rgba(18,20,27,.82);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:26px;display:flex;padding:8px 6px;box-shadow:0 14px 40px rgba(0,0,0,.6)}
+nav button{flex:1;border:0;background:none;color:var(--muted);font:800 10px Manrope,sans-serif;letter-spacing:.06em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;padding:6px 0;border-radius:18px;transition:.2s}
+nav svg{width:22px;height:22px}
+nav button.on{color:#111;background:var(--grad);box-shadow:var(--glow)}
+.dot{position:absolute;top:0;left:calc(50% + 6px);background:#ff3b5c;color:#fff;font-size:10px;font-weight:900;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;padding:0 5px;border:2px solid #12141b}
+.dot[hidden]{display:none}
+.order{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px;margin:0 16px 10px}
+.order .imgs{display:flex;margin-top:10px}.order .imgs img{width:42px;height:42px;border-radius:12px;object-fit:cover;border:2px solid #12141b;margin-right:-8px}
+.st{display:inline-block;font-size:11px;padding:4px 9px;border-radius:9px;background:var(--soft);color:var(--acc2);font-weight:900;letter-spacing:.04em;text-transform:uppercase}
+.steps{display:flex;gap:4px;margin-top:12px}.steps i{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.1)}.steps i.on{background:var(--grad);box-shadow:var(--glow)}
+.prof{display:flex;gap:14px;align-items:center}
+.ava{width:62px;height:62px;border-radius:50%;background:var(--grad);color:#111;display:grid;place-items:center;font:800 24px Unbounded,sans-serif;box-shadow:var(--glow)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:6px}
+.stats b{display:block;font:800 20px Unbounded,sans-serif}.stats small{color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.stats .g{background:var(--grad);-webkit-background-clip:text;color:transparent}
+.menu a{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;font-weight:700}
+.menu a:last-child{border:0}.menu a span{margin-left:auto;color:var(--muted)}
+.bonus{background:linear-gradient(var(--card2),var(--card2)) padding-box,var(--grad) border-box;border:1.5px solid transparent;border-radius:22px;padding:16px;margin:0 16px 12px;position:relative;overflow:hidden}
+.bonus:before{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:var(--acc);filter:blur(50px);opacity:.5}
+.bonus b{font:800 30px Unbounded,sans-serif;background:var(--grad);-webkit-background-clip:text;color:transparent}
+.bonus .btn{width:100%;margin:12px 0 0;padding:13px}
+.toast{position:fixed;left:50%;top:16px;transform:translate(-50%,-250%);background:rgba(18,20,27,.92);backdrop-filter:blur(12px);border:1px solid color-mix(in srgb,var(--acc) 50%,transparent);color:var(--text);padding:10px 16px;border-radius:14px;font-weight:800;z-index:60;transition:.3s;white-space:nowrap;box-shadow:var(--glow)}
+.toast.on{transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<div class="page on" id="p-cat"></div>
+<div class="page" id="p-cart"></div>
+<div class="page" id="p-orders"></div>
+<div class="page" id="p-profile"></div>
+
+<div class="fcart" id="fcart" onclick="go('cart')"><span>🛒 Корзина</span><span class="n" id="fn">0</span><span class="s" id="fs"></span></div>
+<div class="sheet-bg" id="sbg" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<nav>
+  <button data-p="cat" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Каталог</button>
+  <button data-p="cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h12L22 7H6"/></svg>Корзина<span class="dot" id="dot" hidden></span></button>
+  <button data-p="orders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>Заказы</button>
+  <button data-p="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Профиль</button>
+</nav>
+
+<script>
+/* ===== Ниши. Для нового клиента — скопируй блок и поменяй ===== */
+const NICHES = {
+  cafe: {
+    name:"Вкусно Рядом", tag:"Домашняя кухня с доставкой", logo:"🍲", color:"#ff7a1a", color2:"#ffcc33", img:"cafe", banner:"img/ban_cafe.jpg",
+    meta:["⭐ 4,9","🚚 40 мин","от 0 ₽ доставка"], promo:["🎁","Бесплатная доставка от 1 000 ₽","Каждый день с 10:00 до 22:00"],
+    delivery:["Доставка","Самовывоз"], deliveryCost:150, freeFrom:1000, slots:true,
+    cats:["Хиты","Супы","Горячее","Выпечка","Десерты","Напитки"],
+    items:[
+      ["Борщ со сметаной","Супы",320,"350 мл · на говяжьем бульоне","Хит"],["Куриный суп с лапшой","Супы",280,"350 мл · домашняя лапша"],
+      ["Пельмени домашние","Горячее",390,"300 г · со сметаной","Хит"],["Плов с говядиной","Горячее",420,"350 г · в казане"],
+      ["Котлеты с пюре","Горячее",360,"320 г · 2 котлеты"],["Беляши, 2 шт","Выпечка",200,"Сочные, с мясом","−20%"],
+      ["Пирог с капустой","Выпечка",180,"1 кусок · 150 г"],["Шарлотка","Десерты",170,"С яблоками и корицей"],
+      ["Блинчики с творогом","Десерты",240,"3 шт · со сметаной","Хит"],["Морс клюквенный","Напитки",120,"0,5 л · без сахара"],
+    ]
+  },
+  flowers: {
+    name:"Флора", tag:"Цветы с доставкой за 2 часа", logo:"💐", color:"#ff3d8b", color2:"#b45cff", img:"fl", banner:"img/ban_flowers.jpg",
+    meta:["⭐ 5,0","🚚 2 часа","🎁 открытка"], promo:["💌","Открытка с вашим текстом в подарок","Фото букета перед отправкой"],
+    delivery:["Курьер","Заберу сам"], deliveryCost:300, freeFrom:4000, slots:true,
+    cats:["Хиты","Розы","Тюльпаны","Авторские","Подарки"],
+    items:[
+      ["25 красных роз","Розы",3900,"Эквадор, 60 см","Хит"],["51 роза микс","Розы",7500,"Розовые, белые, персиковые"],
+      ["Тюльпаны, 15 шт","Тюльпаны",1900,"Нежные пастельные","−15%"],["Тюльпаны, 35 шт","Тюльпаны",3900,"Яркий весенний микс"],
+      ["Букет «Рассвет»","Авторские",3200,"Пионовидные розы, эвкалипт","Хит"],["Букет «Облако»","Авторские",2800,"Гортензия, кустовая роза"],
+      ["Корзина «Сад»","Авторские",5400,"Сезонные цветы в корзине"],["Подсолнухи, 7 шт","Авторские",1700,"Солнечный букет"],
+      ["Шары на праздник","Подарки",1200,"7 шт, гелий"],["Мишка + букет","Подарки",4200,"Набор-подарок","Хит"],
+    ]
+  },
+  build: {
+    name:"ПрофМеталл", tag:"Профнастил от производителя", logo:"🏗️", color:"#2f8cff", color2:"#22e1ff", img:"b", banner:"img/ban_build.jpg",
+    meta:["⭐ 4,8","🚚 доставка по краю","🧮 расчёт бесплатно"], promo:["📐","Рассчитаем забор за 1 минуту","Скидка 5% при заказе от 50 000 ₽"],
+    delivery:["Доставка","Самовывоз со склада"], deliveryCost:1500, freeFrom:50000, slots:false,
+    cats:["Хиты","Профнастил","Кровля","Забор","Трубы","Крепёж"],
+    items:[
+      ["Профнастил С8, 2 м","Профнастил",1450,"0,45 мм · RAL 8017","Хит"],["Профнастил С20, 2 м","Профнастил",1580,"0,45 мм · оцинковка"],
+      ["Профнастил «под дерево»","Профнастил",2100,"2 м · печать"],["Металлочерепица Монтеррей","Кровля",820,"за м² · 0,45 мм","Хит"],
+      ["Конёк фигурный","Кровля",650,"2 м"],["Штакетник М-образный","Забор",165,"1,8 м","−10%"],
+      ["Труба 60×60×2","Трубы",650,"за п.м."],["Труба 40×20×1,5","Трубы",190,"за п.м."],
+      ["Саморезы кровельные","Крепёж",450,"250 шт"],["Калитка с замком","Забор",9000,"1×2 м","Хит"],
+    ]
+  }
+};
+/* ============================================================== */
+
+const N = NICHES[new URLSearchParams(location.search).get("n")] || NICHES.cafe;
+document.documentElement.style.setProperty("--acc", N.color); document.documentElement.style.setProperty("--acc2", N.color2);
+document.title = N.name;
+
+const TG = window.Telegram && Telegram.WebApp && Telegram.WebApp.initData ? Telegram.WebApp : null;
+const APP = TG || window.WebApp || null;
+const safeH=(m,...a)=>{try{const r=APP&&APP.HapticFeedback&&APP.HapticFeedback[m](...a);if(r&&r.catch)r.catch(()=>{})}catch(e){}};
+try{ APP && APP.ready && APP.ready(); TG && TG.expand(); }catch(e){}
+const haptic = (t="light") => { safeH("impactOccurred",t); };
+const user = (()=>{ try{ return APP.initDataUnsafe.user || null; }catch(e){ return null; } })();
+
+const $ = id => document.getElementById(id);
+const rub = n => n.toLocaleString("ru-RU")+" ₽";
+const items = N.items.map((a,i)=>({id:i,name:a[0],cat:a[1],price:a[2],desc:a[3],badge:a[4],img:`img/${N.img}_${i+1}.jpg`}));
+let cart = {}, cat = "Хиты", q = "", way = 0, orders = [];
+
+const bonusBal = () => 250 + Math.round(orders.reduce((s,o)=>s+o.total,0)*0.05);
+const cartCount = () => Object.values(cart).reduce((a,b)=>a+b,0);
+const cartSum = () => Object.entries(cart).reduce((s,[id,n])=>s+items[id].price*n,0);
+function toast(t){ $("toast").textContent=t; $("toast").classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>$("toast").classList.remove("on"),1600); }
+function setQty(id,d,ev){
+  ev && ev.stopPropagation();
+  const was = cart[id]||0; cart[id]=was+d; if(cart[id]<=0) delete cart[id];
+  haptic(); if(d>0 && !was) toast("✓ "+items[id].name+" в корзине");
+  render(); const b=$("dot"); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+}
+function buyBtn(it){
+  const n = cart[it.id];
+  return n ? `<div class="qty"><button onclick="setQty(${it.id},-1,event)">−</button>${n}<button onclick="setQty(${it.id},1,event)">+</button></div>`
+           : `<button class="add" onclick="setQty(${it.id},1,event)">+</button>`;
+}
+const badge = b => b ? `<span class="badge ${b.startsWith("−")?"sale":""}">${b==="Хит"?"🔥 Хит":b}</span>` : "";
+
+function renderCat(){
+  const list = q ? items.filter(it=>it.name.toLowerCase().includes(q)) : items.filter(it => cat==="Хиты" ? it.badge : it.cat===cat);
+  $("p-cat").innerHTML = `
+    <div class="hero" style="background-image:url(${N.banner})"><div class="topbar"><span class="pill">📍 Тимашевск</span><span class="pill">🎁 <b>${bonusBal()} ₽</b></span></div><div class="in">
+      <div class="brand"><div class="logo">${N.logo}</div><div><b>${N.name}</b><small>${N.tag}</small></div></div>
+      <div class="meta">${N.meta.map(m=>`<span>${m}</span>`).join("")}</div></div></div>
+    <div class="promo"><i>${N.promo[0]}</i><div><b>${N.promo[1]}</b><small>${N.promo[2]}</small></div></div>
+    <div class="search">🔍<input placeholder="Найти в каталоге" value="${q}" oninput="q=this.value.toLowerCase();renderGrid()"></div>
+    <div class="cats">${N.cats.map(c=>`<button class="${c===cat&&!q?'on':''}" onclick="cat='${c}';q='';haptic();renderCat()">${c==="Хиты"?"🔥 Хиты":c}</button>`).join("")}</div>
+    <h3 id="ttl">${q?"Поиск":cat==="Хиты"?"Популярное":cat}</h3>
+    <div class="grid" id="grid"></div>`;
+  renderGrid(list);
+}
+function renderGrid(list){
+  if(!list) list = q ? items.filter(it=>it.name.toLowerCase().includes(q)) : items.filter(it => cat==="Хиты" ? it.badge : it.cat===cat);
+  $("grid").innerHTML = list.map(it=>`
+    <div class="item" onclick="openItem(${it.id})"><div class="ph"><img src="${it.img}" alt="" loading="lazy">${badge(it.badge)}</div>
+    <div class="info"><b>${it.name}</b><small>${it.desc}</small><div class="buy"><span>${rub(it.price)}</span>${buyBtn(it)}</div></div></div>`).join("")
+    || `<div class="empty" style="grid-column:1/-1"><div>🔍</div>Ничего не нашли</div>`;
+}
+
+function openItem(id){
+  const it = items[id]; haptic();
+  $("sheet").innerHTML = `<div style="position:relative"><img class="big" src="${it.img}"><div class="grab"></div><button class="x" onclick="closeSheet()">✕</button>${badge(it.badge)}</div>
+    <div class="body"><h2>${it.name}</h2><div class="d">${it.desc}</div>
+    <div class="row2"><span>${it.cat}</span><span>⭐ 4,9</span><span>${N.delivery[0]}</span></div>
+    <button class="btn" onclick="setQty(${id},1);closeSheet()">Добавить · ${rub(it.price)}</button></div>`;
+  $("sheet").classList.add("on"); $("sbg").classList.add("on");
+}
+function closeSheet(){ $("sheet").classList.remove("on"); $("sbg").classList.remove("on"); }
+
+function renderCart(){
+  const ids = Object.keys(cart);
+  if(!ids.length){ $("p-cart").innerHTML = `<h2 class="t">Корзина</h2><div class="empty"><div>🛒</div>Пока пусто.<br>Загляните в каталог, там вкусно</div><button class="btn" onclick="go('cat')">В каталог</button>`; return; }
+  const sum = cartSum(), del = way===0 && sum<N.freeFrom ? N.deliveryCost : 0, pct = Math.min(100, sum/N.freeFrom*100);
+  $("p-cart").innerHTML = `<h2 class="t">Корзина</h2>
+    ${ids.map(id=>{const it=items[id];return `<div class="row"><img src="${it.img}"><div class="t"><b>${it.name}</b><small>${rub(it.price)}</small></div>${buyBtn(it)}</div>`}).join("")}
+    <div class="card">
+      ${way===0?(del?`<div style="font-weight:700">До бесплатной доставки ${rub(N.freeFrom-sum)}</div>`:`<div style="font-weight:700;color:var(--acc)">🎉 Доставка бесплатно</div>`)+`<div class="bar"><i style="width:${pct}%"></i></div>`:""}
+    </div>
+    <div class="card">
+      <div class="seg">${N.delivery.map((d,i)=>`<button class="${i===way?'on':''}" onclick="way=${i};renderCart()">${d}</button>`).join("")}</div>
+      <label>Имя</label><input id="fName" value="${user?(user.first_name||''):''}" placeholder="Как к вам обращаться">
+      <label>Телефон</label><input id="fPhone" type="tel" placeholder="+7 ___ ___-__-__">
+      ${way===0?`<label>Адрес</label><input id="fAddr" placeholder="Улица, дом, квартира">`:""}
+      ${N.slots?`<label>Когда</label><select id="fTime"><option>Как можно скорее</option><option>12:00–14:00</option><option>14:00–16:00</option><option>18:00–20:00</option></select>`:""}
+      <label>Комментарий</label><textarea id="fNote" rows="2" placeholder="Пожелания к заказу"></textarea>
+    </div>
+    <div class="card">
+      <div class="sum"><span>Товары, ${cartCount()} шт</span><span>${rub(sum)}</span></div>
+      <div class="sum"><span>${N.delivery[way]}</span><span>${del?rub(del):"бесплатно"}</span></div>
+      <div class="sum big"><span>Итого</span><span>${rub(sum+del)}</span></div>
+    </div>
+    <button class="btn" onclick="checkout(${sum+del})">Оформить заказ · ${rub(sum+del)}</button>`;
+}
+
+function checkout(total){
+  const ph = $("fPhone");
+  if(ph.value.replace(/\D/g,"").length<10){ ph.focus(); ph.style.borderColor="#e03131"; toast("Укажите телефон"); safeH("notificationOccurred","error"); return; }
+  const no = 1000 + orders.length + Math.floor(Math.random()*900);
+  orders.unshift({no,total,count:cartCount(),imgs:Object.keys(cart).map(id=>items[id].img),date:new Date().toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})});
+  /* Здесь заказ уходит владельцу: в бота Telegram/MAX, на почту или в таблицу */
+  cart = {}; safeH("notificationOccurred","success");
+  $("p-cart").innerHTML = `<div class="done"><div class="ok">✅</div><h2 style="margin:0 0 6px">Заказ №${no} принят!</h2><p style="color:var(--muted)">Перезвоним в течение 5 минут,<br>чтобы подтвердить заказ</p></div><button class="btn" onclick="go('orders')">Мои заказы</button>`;
+  updBar();
+}
+
+function renderOrders(){
+  $("p-orders").innerHTML = `<h2 class="t">Мои заказы</h2>` + (orders.length ? orders.map((o,i)=>`
+    <div class="order"><div style="display:flex;justify-content:space-between;align-items:center"><b>Заказ №${o.no}</b><span class="st">${i?"Доставлен":"Готовится"}</span></div>
+    <small style="color:var(--muted)">${o.date} · ${o.count} поз. · ${rub(o.total)}</small>
+    <div class="imgs">${o.imgs.slice(0,5).map(s=>`<img src="${s}">`).join("")}</div>
+    <div class="steps"><i class="on"></i><i class="${i?'on':''}"></i><i class="${i?'on':''}"></i></div></div>`).join("")
+    : `<div class="empty"><div>📦</div>Здесь появятся ваши заказы</div>`);
+}
+
+function renderProfile(){
+  const nm = user ? [user.first_name,user.last_name].filter(Boolean).join(" ") : "Гость";
+  $("p-profile").innerHTML = `<h2 class="t">Профиль</h2>
+    <div class="card prof"><div class="ava">${nm[0]}</div><div><b style="font-size:17px">${nm}</b><br><small style="color:var(--muted)">Заказов: ${orders.length}</small></div></div>
+    <div class="card stats"><div><b>${orders.length}</b><small>заказов</small></div><div><b>${rub(orders.reduce((s,o)=>s+o.total,0)).replace(" ₽","")}</b><small>потрачено</small></div><div><b class="g">${bonusBal()}</b><small>бонусов</small></div></div>
+    <div class="bonus"><small style="color:var(--muted);font-weight:800;letter-spacing:.08em">БОНУСНЫЙ СЧЁТ</small><br><b>${bonusBal()} ₽</b><br><small style="color:var(--muted)">Возвращаем 5% с каждого заказа</small><button class="btn" onclick="go('cat')">Потратить бонусы</button></div>
+    <div class="card menu"><a>📍 Адреса доставки<span>›</span></a><a>💳 Способы оплаты<span>›</span></a><a>💬 Написать нам<span>›</span></a><a>ℹ️ ${N.name}<span>9:00–21:00</span></a></div>`;
+}
+
+function updBar(){
+  const n=cartCount(); $("dot").hidden=!n; $("dot").textContent=n;
+  $("fn").textContent=n; $("fs").textContent=rub(cartSum());
+  $("fcart").classList.toggle("on", n>0 && cur==="cat");
+}
+function render(){ if(cur==="cat") renderGrid(); if(cur==="cart") renderCart(); updBar(); }
+let cur="cat";
+function go(p){
+  cur=p; haptic(); closeSheet();
+  document.querySelectorAll(".page").forEach(e=>e.classList.toggle("on",e.id==="p-"+p));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.p===p));
+  ({cat:renderCat,cart:renderCart,orders:renderOrders,profile:renderProfile})[p](); updBar(); scrollTo(0,0);
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>go(b.dataset.p));
+renderCat(); updBar();
+/* демо-состояния для скриншотов: ?demo=cart|orders */
+const DEMO = new URLSearchParams(location.search).get("demo");
+if(DEMO==="cart"){ cart={0:1,2:2,5:1}; go("cart"); }
+if(DEMO==="orders"){ orders=[{no:1482,total:1540,count:3,imgs:[items[0].img,items[2].img,items[5].img],date:"сегодня, 13:20"},{no:1391,total:870,count:2,imgs:[items[1].img,items[8].img],date:"вчера, 19:05"}]; go("orders"); }
+if(DEMO==="item"){ openItem(0); }
+</script>
+</body>
+</html>

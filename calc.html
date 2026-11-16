@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Калькулятор забора и крыши</title>
+<script src="https://st.max.ru/js/max-web-app.js"></script>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#fff; --text:#16181d; --muted:#6b7280; --line:#e5e7eb;
+    --accent:#c0392b; --accent2:#a93226; --ok:#1e8e3e; --chip:#eef0f3;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1115; --card:#1a1d23; --text:#f1f2f4; --muted:#9aa1ac; --line:#2a2e36; --chip:#252932; }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:16px 16px calc(24px + env(safe-area-inset-bottom))}
+  h1{font-size:22px;margin:4px 0 2px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:14px}
+  .tabs{display:flex;background:var(--chip);border-radius:12px;padding:4px;margin-bottom:14px}
+  .tabs button{flex:1;border:0;background:none;color:var(--text);font-size:16px;font-weight:600;padding:10px;border-radius:9px}
+  .tabs button.on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px}
+  label{display:block;font-size:14px;color:var(--muted);margin:10px 0 6px}
+  label:first-child{margin-top:0}
+  input,select{width:100%;font-size:17px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);appearance:none}
+  .row{display:flex;gap:10px}.row>div{flex:1}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chips button{border:1px solid var(--line);background:var(--bg);color:var(--text);padding:9px 12px;border-radius:20px;font-size:15px}
+  .chips button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .res table{width:100%;border-collapse:collapse;font-size:15px}
+  .res td{padding:7px 0;border-bottom:1px solid var(--line)}
+  .res td:last-child{text-align:right;white-space:nowrap}
+  .total{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .total b{font-size:26px;color:var(--accent)}
+  .note{font-size:13px;color:var(--muted);margin-top:8px}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:15px;font-size:17px;font-weight:600;margin-top:10px;color:#fff;background:var(--accent)}
+  .btn:active{background:var(--accent2)}
+  .btn.sec{background:var(--chip);color:var(--text)}
+  .hide{display:none}
+  .toast{position:fixed;left:16px;right:16px;bottom:24px;background:var(--ok);color:#fff;padding:14px;border-radius:12px;text-align:center;font-weight:600;opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<h1>Расчёт забора и крыши</h1>
+<div class="sub">Профнастил и металлоконструкции от производителя · Тимашевск, Кореновск</div>
+
+<div class="tabs">
+  <button id="tFence" class="on">🧱 Забор</button>
+  <button id="tRoof">🏠 Крыша</button>
+</div>
+
+<!-- ЗАБОР -->
+<div id="fence">
+  <div class="card">
+    <label>Длина забора, м</label>
+    <input id="fLen" type="number" inputmode="decimal" value="30" min="1">
+    <label>Высота</label>
+    <div class="chips" id="fHeight">
+      <button data-v="1.5">1,5 м</button><button data-v="1.8">1,8 м</button>
+      <button data-v="2" class="on">2 м</button><button data-v="2.5">2,5 м</button>
+    </div>
+    <label>Материал</label>
+    <select id="fMat"></select>
+    <div class="row">
+      <div><label>Калитка</label><select id="fGate"><option value="0">Нет</option><option value="1" selected>1</option><option value="2">2</option></select></div>
+      <div><label>Ворота</label><select id="fDoor"><option value="0">Нет</option><option value="1" selected>1</option></select></div>
+    </div>
+    <label><input id="fMount" type="checkbox" style="width:auto;margin-right:8px">Нужен монтаж</label>
+  </div>
+  <div class="card res" id="fRes"></div>
+</div>
+
+<!-- КРЫША -->
+<div id="roof" class="hide">
+  <div class="card">
+    <label>Тип крыши</label>
+    <div class="chips" id="rType">
+      <button data-v="1">Односкатная</button><button data-v="2" class="on">Двускатная</button>
+    </div>
+    <div class="row">
+      <div><label>Длина ската, м</label><input id="rSlope" type="number" inputmode="decimal" value="5"></div>
+      <div><label>Ширина ската, м</label><input id="rWidth" type="number" inputmode="decimal" value="10"></div>
+    </div>
+    <label>Материал</label>
+    <select id="rMat"></select>
+    <label><input id="rMount" type="checkbox" style="width:auto;margin-right:8px">Нужен монтаж</label>
+  </div>
+  <div class="card res" id="rRes"></div>
+</div>
+
+<button class="btn" id="send">📩 Отправить заявку</button>
+<button class="btn sec" id="call">📞 Позвонить 8 988 557-47-17</button>
+<div class="note" style="text-align:center">Цены примерные. Точную сумму назовёт менеджер.</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ========= НАСТРОЙКИ — меняй цены здесь ========= */
+const PHONE = "79885574717";
+const MATS_FENCE = [
+  // name, полезная ширина листа (м), цена за м²
+  {name:"Профнастил С8, цветной 0,45", w:1.15, price:650},
+  {name:"Профнастил С20, цветной 0,45", w:1.10, price:700},
+  {name:"Профнастил «под дерево»", w:1.15, price:950},
+  {name:"Штакетник металлический (шаг 10 см)", w:0.10, price:0, perPiece:150},
+];
+const MATS_ROOF = [
+  {name:"Металлочерепица 0,45", w:1.10, price:750},
+  {name:"Профнастил НС35, 0,5", w:1.00, price:780},
+  {name:"Профнастил С20, 0,45", w:1.10, price:700},
+];
+const P = {
+  post: 650,        // столб 60×60, за метр
+  lag: 190,         // лага 40×20, за метр
+  screw: 4,         // саморез, шт
+  gate: 9000,       // калитка
+  door: 25000,      // ворота распашные
+  ridge: 450,       // конёк, за метр
+  roofScrew: 5,     // кровельный саморез
+  mountFence: 700,  // монтаж забора, за метр
+  mountRoof: 450,   // монтаж кровли, за м²
+};
+/* ================================================= */
+
+const WA = window.WebApp;
+try { WA && WA.ready && WA.ready(); } catch(e){}
+const $ = id => document.getElementById(id);
+const rub = n => Math.round(n).toLocaleString("ru-RU") + " ₽";
+const haptic = () => { try { WA.HapticFeedback.selectionChanged(); } catch(e){} };
+let mode = "fence", lastText = "";
+
+MATS_FENCE.forEach((m,i)=> $("fMat").add(new Option(m.name,i)));
+MATS_ROOF.forEach((m,i)=> $("rMat").add(new Option(m.name,i)));
+
+function chips(id){
+  $(id).addEventListener("click", e=>{
+    if(e.target.tagName!=="BUTTON") return;
+    [...$(id).children].forEach(b=>b.classList.remove("on"));
+    e.target.classList.add("on"); haptic(); calc();
+  });
+}
+const chipVal = id => +$(id).querySelector(".on").dataset.v;
+chips("fHeight"); chips("rType");
+
+function table(rows, total, note){
+  return `<table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</table>
+    <div class="total"><span>Итого примерно</span><b>${rub(total)}</b></div>
+    ${note?`<div class="note">${note}</div>`:""}`;
+}
+
+function calcFence(){
+  const L = Math.max(0, +$("fLen").value || 0), H = chipVal("fHeight");
+  const m = MATS_FENCE[$("fMat").value];
+  const gates = +$("fGate").value, doors = +$("fDoor").value;
+  const posts = Math.ceil(L / 2.5) + 1 + gates + doors * 2;
+  const postLen = H + 1;                 // 1 м в землю
+  const lagRows = H > 1.8 ? 3 : 2;
+  const lagM = L * lagRows;
+  let sheets, matCost, matLabel, screws;
+  if (m.perPiece){
+    sheets = Math.ceil(L / m.w);
+    matCost = sheets * m.perPiece;
+    matLabel = `Штакетник ${H} м`;
+    screws = sheets * lagRows * 2;
+  } else {
+    sheets = Math.ceil(L / m.w);
+    matCost = sheets * 1.2 * H * m.price; // полная ширина листа ~1,2 м
+    matLabel = `Листы ${H} м`;
+    screws = sheets * lagRows * 4;
+  }
+  const rows = [
+    [`${matLabel}`, `${sheets} шт · ${rub(matCost)}`],
+    [`Столбы 60×60 по ${postLen} м`, `${posts} шт · ${rub(posts*postLen*P.post)}`],
+    [`Лаги 40×20 (${lagRows} ряда)`, `${Math.ceil(lagM)} м · ${rub(lagM*P.lag)}`],
+    [`Саморезы`, `${screws} шт · ${rub(screws*P.screw)}`],
+  ];
+  let total = matCost + posts*postLen*P.post + lagM*P.lag + screws*P.screw;
+  if (gates){ rows.push([`Калитка`, `${gates} шт · ${rub(gates*P.gate)}`]); total += gates*P.gate; }
+  if (doors){ rows.push([`Ворота`, `${doors} шт · ${rub(doors*P.door)}`]); total += doors*P.door; }
+  if ($("fMount").checked){ rows.push([`Монтаж`, rub(L*P.mountFence)]); total += L*P.mountFence; }
+  $("fRes").innerHTML = table(rows, total);
+  lastText = `Забор: ${L} м, высота ${H} м, ${m.name}. Калиток: ${gates}, ворот: ${doors}. Монтаж: ${$("fMount").checked?"да":"нет"}.\n`
+    + rows.map(r=>`• ${r[0]}: ${r[1]}`).join("\n") + `\nИтого примерно: ${rub(total)}`;
+}
+
+function calcRoof(){
+  const n = chipVal("rType"), S = Math.max(0,+$("rSlope").value||0), W = Math.max(0,+$("rWidth").value||0);
+  const m = MATS_ROOF[$("rMat").value];
+  const area = n * S * W;
+  const sheetsPerSlope = Math.ceil(W / m.w);
+  const sheets = sheetsPerSlope * n;
+  const areaBuy = area * 1.12;           // +12% на нахлёст и подрезку
+  const screws = Math.ceil(area * 8);
+  const rows = [
+    [`Площадь кровли`, `${area.toFixed(1)} м²`],
+    [`${m.name}`, `${sheets} листов по ${S} м · ${rub(areaBuy*m.price)}`],
+    [`Кровельные саморезы`, `${screws} шт · ${rub(screws*P.roofScrew)}`],
+  ];
+  let total = areaBuy*m.price + screws*P.roofScrew;
+  if (n===2){ rows.push([`Конёк`, `${W} м · ${rub(W*P.ridge)}`]); total += W*P.ridge; }
+  if ($("rMount").checked){ rows.push([`Монтаж`, rub(area*P.mountRoof)]); total += area*P.mountRoof; }
+  $("rRes").innerHTML = table(rows, total, "Запас 12% на нахлёст уже учтён. Доборные элементы (ветровые, карнизные планки, водосток) — по запросу.");
+  lastText = `Крыша: ${n===2?"двускатная":"односкатная"}, скат ${S}×${W} м, ${m.name}. Монтаж: ${$("rMount").checked?"да":"нет"}.\n`
+    + rows.map(r=>`• ${r[0]}: ${r[1]}`).join("\n") + `\nИтого примерно: ${rub(total)}`;
+}
+
+function calc(){ mode==="fence" ? calcFence() : calcRoof(); }
+document.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",calc));
+
+function setMode(m){
+  mode = m; haptic();
+  $("fence").classList.toggle("hide", m!=="fence");
+  $("roof").classList.toggle("hide", m!=="roof");
+  $("tFence").classList.toggle("on", m==="fence");
+  $("tRoof").classList.toggle("on", m==="roof");
+  calc();
+}
+$("tFence").onclick = ()=>setMode("fence");
+$("tRoof").onclick = ()=>setMode("roof");
+
+function open(url){
+  try { if (WA && WA.openLink) return WA.openLink(url); } catch(e){}
+  window.open(url, "_blank");
+}
+function toast(t){ $("toast").textContent=t; $("toast").classList.add("show"); setTimeout(()=>$("toast").classList.remove("show"),2500); }
+
+$("send").onclick = async ()=>{
+  let who = "";
+  try {
+    const u = WA && WA.initDataUnsafe && WA.initDataUnsafe.user;
+    if (u) who = `Имя: ${[u.first_name,u.last_name].filter(Boolean).join(" ")}\n`;
+    if (WA && WA.requestContact){
+      const c = await WA.requestContact();
+      if (c && c.phone) who += `Телефон: ${c.phone}\n`;
+    }
+  } catch(e){}
+  try { WA.HapticFeedback.notificationOccurred("success"); } catch(e){}
+  const text = `Заявка из MAX\n${who}${lastText}`;
+  open(`https://wa.me/${PHONE}?text=${encodeURIComponent(text)}`);
+  toast("Открываем WhatsApp с готовой заявкой");
+};
+$("call").onclick = ()=> open(`tel:+${PHONE}`);
+
+calc();
+</script>
+</body>
+</html>
